@@ -1,0 +1,8 @@
+
+{
+  "name": "AlloggiatiSync Pro",
+  "description": "Un'applicazione professionale per automatizzare l'invio dei dati degli ospiti dal tuo sito WordPress (Formidable Forms) al portale Alloggiati Web della Polizia di Stato utilizzando la chiave WSKEY.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
