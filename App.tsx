@@ -30,8 +30,8 @@ declare global {
     openSelectKey: () => Promise<void>;
   }
   interface Window {
-    // FIX: Removed readonly to match environment's existing Window interface definition
-    aistudio: AIStudio;
+    // FIX: Added readonly to match environment's existing Window interface definition and fix modifier mismatch error
+    readonly aistudio: AIStudio;
   }
 }
 
