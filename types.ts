@@ -25,12 +25,13 @@ export interface GuestData {
   arrivalDate: string;
   stayDays: number;
   guestType: GuestType | string;
-  reservationCode?: string; // Codice Airbnb (es. HMXXXXXXX)
+  reservationCode?: string;
   rawWebhookData?: any;
   status: RegistrationStatus;
   errorMessage?: string;
   alloggiatiId?: string;
   source?: string;
+  sentAt?: string; // Data e ora dell'invio avvenuto con successo
 }
 
 export interface AppSettings {

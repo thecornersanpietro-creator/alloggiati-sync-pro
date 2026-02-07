@@ -2,8 +2,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { GuestData, RegistrationStatus, GuestType } from "../types.ts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export interface ParseInput {
   text?: string;
   image?: {
@@ -13,29 +11,26 @@ export interface ParseInput {
 }
 
 export const sanitizeGuestData = async (input: ParseInput): Promise<Partial<GuestData>> => {
+  // Inizializzazione locale obbligatoria per catturare la chiave API aggiornata dal selettore
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
   const parts: any[] = [];
   
-  let prompt = `Analizza questo input (testo o immagine di documento/prenotazione) ed estrai i dati per il portale Alloggiati Web della Polizia di Stato.
-    
-    REGOLE DI ESTRAZIONE:
-    1. "firstName" e "lastName": Dividi bene nome e cognome.
-    2. "birthDate": Cerca date nel formato gg/mm/aaaa e convertile in YYYY-MM-DD.
-    3. "birthPlace": Luogo di nascita. Se estero, scrivi "Città (Nazione)".
-    4. "citizenship": Nazione (es. "Italia", "Francia").
-    5. "documentType": "CARTA IDENTITA", "PASSAPORTO" o "PATENTE".
-    6. "documentNumber": Codice alfanumerico del documento.
-    7. "documentIssuePlace": Luogo di rilascio.
-    8. "arrivalDate": Data di check-in (YYYY-MM-DD).
-    9. "stayDays": Numero di notti.
-    10. "guestType": "16" (Capofamiglia), "17" (Familiare), "18" (Gruppo).
-    11. "reservationCode": Cerca codici prenotazione Airbnb tipo "HM" seguito da lettere/numeri.
-    
-    Restituisci solo JSON. Se un dato non è presente, usa una stringa vuota.`;
+  let prompt = `Sei un esperto del portale Alloggiati Web della Polizia di Stato italiana. 
+    Estrai i dati dell'ospite principale da questo input.
 
-  if (input.text) {
-    parts.push({ text: input.text });
-  }
-  
+    REGOLE CRITICHE PER LA CITTADINANZA:
+    - La cittadinanza deve essere nel formato TESTO ITALIANO MAIUSCOLO (es: "ITALIA", "STATI UNITI", "FRANCIA", "GERMANIA", "REGNO UNITO", "SPAGNA").
+    - Se l'ospite è americano, scrivi "STATI UNITI".
+    - Se l'ospite è inglese, scrivi "REGNO UNITO".
+
+    REGOLE PER I DOCUMENTI:
+    - Identifica il tipo: "CARTA DI IDENTITA", "PASSAPORTO" o "PATENTE".
+    - Estrai il numero esatto senza spazi.
+
+    FORMATO RISPOSTA: JSON puro con campi: firstName, lastName, birthDate (YYYY-MM-DD), birthPlace, citizenship, documentType, documentNumber, documentIssuePlace, arrivalDate (YYYY-MM-DD), stayDays (numero), reservationCode.`;
+
+  if (input.text) parts.push({ text: input.text });
   if (input.image) {
     parts.push({
       inlineData: {
@@ -44,45 +39,49 @@ export const sanitizeGuestData = async (input: ParseInput): Promise<Partial<Gues
       }
     });
   }
-
   parts.push({ text: prompt });
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: { parts },
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          firstName: { type: Type.STRING },
-          lastName: { type: Type.STRING },
-          birthDate: { type: Type.STRING },
-          birthPlace: { type: Type.STRING },
-          citizenship: { type: Type.STRING },
-          documentType: { type: Type.STRING },
-          documentNumber: { type: Type.STRING },
-          documentIssuePlace: { type: Type.STRING },
-          arrivalDate: { type: Type.STRING },
-          stayDays: { type: Type.NUMBER },
-          guestType: { type: Type.STRING },
-          reservationCode: { type: Type.STRING }
-        },
-        required: ["firstName", "lastName"]
-      }
-    }
-  });
-
   try {
-    const text = response.text;
-    const data = JSON.parse(text || "{}");
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: { parts },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            firstName: { type: Type.STRING },
+            lastName: { type: Type.STRING },
+            birthDate: { type: Type.STRING },
+            birthPlace: { type: Type.STRING },
+            citizenship: { type: Type.STRING },
+            documentType: { type: Type.STRING },
+            documentNumber: { type: Type.STRING },
+            documentIssuePlace: { type: Type.STRING },
+            arrivalDate: { type: Type.STRING },
+            stayDays: { type: Type.NUMBER },
+            reservationCode: { type: Type.STRING }
+          },
+          required: ["firstName", "lastName"]
+        }
+      }
+    });
+
+    const data = JSON.parse(response.text || "{}");
     return {
       ...data,
       status: RegistrationStatus.PENDING,
-      guestType: data.guestType || GuestType.HEAD
+      guestType: GuestType.HEAD
     };
-  } catch (e) {
-    console.error("Gemini Error:", e);
-    throw new Error("Errore durante l'analisi. Verifica il testo o la qualità della foto.");
+  } catch (e: any) {
+    const errorMsg = e.message || "";
+    // Handle quota errors and invalid keys according to guidelines
+    if (errorMsg.includes("429") || errorMsg.includes("quota")) {
+      throw new Error("QUOTA_EXCEEDED");
+    }
+    if (errorMsg.includes("Requested entity was not found")) {
+      throw new Error("API_KEY_INVALID");
+    }
+    throw new Error("Impossibile decifrare i dati. Controlla la qualità della foto o del testo.");
   }
 };

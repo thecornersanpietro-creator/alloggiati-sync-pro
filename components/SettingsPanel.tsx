@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AppSettings } from '../types';
 
@@ -7,9 +6,10 @@ interface SettingsPanelProps {
   onUpdate: (settings: Partial<AppSettings>) => void;
   onClose: () => void;
   onResetSync?: () => void;
+  onOpenKeySelector?: () => void;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onUpdate, onClose, onResetSync }) => {
+const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onUpdate, onClose, onResetSync, onOpenKeySelector }) => {
   const [localSettings, setLocalSettings] = useState(settings);
 
   const save = () => {
@@ -34,6 +34,23 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onUpdate, onClo
       </div>
       
       <div className="p-6 space-y-6 text-sm">
+        <div className="p-4 bg-slate-900 rounded-xl border border-slate-700">
+           <label className="block text-[10px] font-black text-indigo-400 uppercase mb-2 tracking-widest">IA & Billing</label>
+           <button 
+            onClick={onOpenKeySelector}
+            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-500/20 mb-3"
+           >
+            Imposta Chiave API Personale
+           </button>
+           <a 
+            href="https://ai.google.dev/gemini-api/docs/billing" 
+            target="_blank" 
+            className="block text-center text-[9px] text-slate-400 hover:text-white underline font-bold"
+           >
+            Come attivare la fatturazione (Google Cloud)
+           </a>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5">User Code</label>
@@ -82,6 +99,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onUpdate, onClo
                   className="bg-white border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold"
                 >
                   <option value={1}>1 giorno</option>
+                  <option value={2}>2 giorni</option>
                   <option value={3}>3 giorni</option>
                   <option value={7}>7 giorni</option>
                   <option value={14}>14 giorni</option>
@@ -91,8 +109,8 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onUpdate, onClo
 
              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                 <div>
-                  <h4 className="font-bold text-slate-800">Auto-Invio Portale</h4>
-                  <p className="text-[10px] text-slate-500">Registra subito dopo l'importazione.</p>
+                  <h4 className="font-bold text-slate-800">Auto-Invio (Esperto)</h4>
+                  <p className="text-[10px] text-slate-500">Invia al portale SENZA tua conferma.</p>
                 </div>
                 <button 
                   onClick={() => setLocalSettings({...localSettings, autoSync: !localSettings.autoSync})}
@@ -109,9 +127,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ settings, onUpdate, onClo
                 >
                   Svuota Memoria Sincronizzazione
                 </button>
-                <p className="mt-2 text-[9px] text-slate-400 italic text-center">
-                  Usa questo se l'app "non trova niente" ma ci sono email nuove.
-                </p>
              </div>
           </div>
         </div>

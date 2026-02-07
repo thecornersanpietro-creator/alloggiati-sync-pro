@@ -1,25 +1,30 @@
 
-import { GuestData, RegistrationStatus } from "../types.ts";
+import { GuestData } from "../types.ts";
 
 export const sendToAlloggiati = async (guest: GuestData, wsKey: string): Promise<{ success: boolean; id?: string; error?: string }> => {
-  // Simulazione dell'invio reale al portale Alloggiati Web
-  console.log(`Inviando dati a Alloggiati Web per ${guest.firstName} ${guest.lastName} utilizzando WSKEY: ${wsKey.substring(0, 5)}...`);
+  // Simulazione dell'invio al portale Alloggiati Web
+  console.log("INVIO DATI PORTALE:", {
+    nominativo: `${guest.firstName} ${guest.lastName}`,
+    cittadinanza: guest.citizenship,
+    documento: guest.documentNumber,
+    notti: guest.stayDays
+  });
   
   return new Promise((resolve) => {
     setTimeout(() => {
-      // Simulazione successo/errore per demo
-      const isSuccess = Math.random() > 0.1;
-      if (isSuccess) {
+      // Simuliamo successo nel 100% dei casi se i dati minimi ci sono, 
+      // per permettere all'utente di testare il flusso.
+      if (guest.firstName && guest.lastName && guest.documentNumber) {
         resolve({
           success: true,
-          id: `ALL-${Math.floor(Math.random() * 1000000)}`
+          id: `PROT-${Math.floor(Math.random() * 1000000)}`
         });
       } else {
         resolve({
           success: false,
-          error: "Errore di validazione: Il numero del documento non è nel formato corretto per la cittadinanza selezionata."
+          error: "Dati mancanti: Nome, Cognome o Numero Documento sono obbligatori."
         });
       }
-    }, 2000);
+    }, 1500);
   });
 };

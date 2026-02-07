@@ -1,7 +1,6 @@
-
 {
-  "name": "AlloggiatiSync Pro",
-  "description": "Un'applicazione professionale per automatizzare l'invio dei dati degli ospiti dal tuo sito WordPress (Formidable Forms) al portale Alloggiati Web della Polizia di Stato utilizzando la chiave WSKEY.",
+  "name": "The Corner Hub - AlloggiatiSync",
+  "description": "Automazione professionale per l'invio dei dati degli ospiti da Airbnb e WordPress al portale Alloggiati Web della Polizia di Stato.",
   "requestFramePermissions": [
     "camera"
   ]
